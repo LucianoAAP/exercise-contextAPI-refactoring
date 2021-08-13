@@ -10,8 +10,9 @@ import Selector from './components/Selector';
 
 class App extends Component {
   componentDidMount() {
-    const { dispatch, selectedSubreddit } = this.props;
-    dispatch(fetchPostsIfNeeded(selectedSubreddit));
+    const value = this.context;
+    const { selectedSubreddit, fetchPostsIfNeeded } = value;
+    fetchPostsIfNeeded(selectedSubreddit);
   }
 
   componentDidUpdate(prevProps) {
