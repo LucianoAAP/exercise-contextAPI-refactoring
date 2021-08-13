@@ -11,18 +11,28 @@ class Provider extends React.Component {
         blue: false,
         yellow: false,
       },
+      signal: { color: 'red' },
     }
     this.moveCar = this.moveCar.bind(this);
+    this.changeSignal = this.changeSignal.bind(this);
   }
 
   moveCar(car, side) {
     this.setState((prevState) => ({ cars: { ...prevState.cars, [car]: side } }));
   }
 
+  changeSignal(color) {
+    this.setState({ signal: { color } });
+  };
+
   render() {
     const { children } = this.props;
     return (
-      <MyContext.Provider value={ { ...this.state, moveCar: this.moveCar } }>
+      <MyContext.Provider
+        value={
+          { ...this.state, moveCar: this.moveCar, changeSignal: this.changeSignal }
+        }
+      >
         { children }
       </MyContext.Provider>
     );
@@ -30,7 +40,7 @@ class Provider extends React.Component {
 }
 
 Provider.propTypes = {
-  children: PropTypes.node.isRequired;
+  children: PropTypes.node.isRequired,
 };
 
 export default Provider;

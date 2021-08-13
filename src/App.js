@@ -8,9 +8,9 @@ function App() {
   return (
     <Provider>
       <div className="container">
-      <Cars />
-      <TrafficSignal />
-    </div>
+        <Cars />
+        <TrafficSignal />
+      </div>
     </Provider>
   );
 }
