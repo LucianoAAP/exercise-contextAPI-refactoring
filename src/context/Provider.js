@@ -29,48 +29,81 @@ class Provider extends React.Component {
     this.fetchPostsIfNeeded = this.fetchPostsIfNeeded.bind(this);
   }
 
+  componentDidUpdate(_prevProps, prevState) {
+    const { state } = this;
+
+    if (prevState.selectedSubreddit !== state.selectedSubreddit) {
+      const { selectedSubreddit } = state;
+      this.fetchPostsIfNeeded(selectedSubreddit);
+    }
+  }
+
   selectSubreddit(subreddit) {
     this.setState({ selectedSubreddit: subreddit });
   };
   
   refreshSubreddit(subreddit) {
-    this.setState((prevState) => ({ postsBySubreddit: {
-      ...prevState.postsBySubreddit,
-      [subreddit]: { shouldRefreshSubreddit: true,
-        isFetching: prevState.postsBySubreddit[subreddit].isFetching, },
-    } }));
+    const { postsBySubreddit } = this.state;
+    const newState = {
+      ...postsBySubreddit,
+      [subreddit]: { ...postsBySubreddit[subreddit], shouldRefreshSubreddit: true }
+    };
+    this.setState({ postsBySubreddit: newState});
   };
   
-  requestPosts = (subreddit) => ({
-    type: REQUEST_POSTS,
-    subreddit,
-  });
+  requestPosts(subreddit) {
+    const { postsBySubreddit } = this.state;
+    const newState = {
+      ...postsBySubreddit,
+      [subreddit]: { ...postsBySubreddit[subreddit], shouldRefreshSubreddit: true, isFetching: false }
+    };
+    this.setState({ postsBySubreddit: newState});
+  };
   
-  receivePostsSuccess = (subreddit, json) => ({
-    type: RECEIVE_POSTS_SUCCESS,
-    posts: json.data.children.map((child) => child.data),
-    receivedAt: Date.now(),
-    subreddit,
-  });
+  receivePostsSuccess(subreddit, json) {
+    posts = json.data.children.map((child) => child.data),
+    receivedAt = Date.now();
+    const { postsBySubreddit } = this.state;
+    const newState = {
+      ...postsBySubreddit,
+      [subreddit]: {
+        ...postsBySubreddit[subreddit],
+        shouldRefreshSubreddit: false,
+        isFetching: false,
+        items: posts,
+        lastUpdated: receivedAt,
+      }
+    };
+    this.setState({ postsBySubreddit: newState});
+  };
   
-  receivePostsFailure = (subreddit, error) => ({
-    type: RECEIVE_POSTS_FAILURE,
-    error,
-    subreddit,
-  });
+  receivePostsFailure(subreddit, error) {
+    const { postsBySubreddit } = this.state;
+    const newState = {
+      ...postsBySubreddit,
+      [subreddit]: {
+        ...postsBySubreddit[subreddit],
+        shouldRefreshSubreddit: false,
+        isFetching: false,
+        items: [],
+        error,
+      }
+    };
+    this.setState({ postsBySubreddit: newState});
+  };
   
   fetchPosts(subreddit) {
-    return (dispatch) => {
-      dispatch(requestPosts(subreddit));
+    return () => {
+      requestPosts(subreddit);
   
       return getPostsBySubreddit(subreddit).then(
-        (posts) => dispatch(receivePostsSuccess(subreddit, posts)),
-        (error) => dispatch(receivePostsFailure(subreddit, error.message)),
+        (posts) => receivePostsSuccess(subreddit, posts),
+        (error) => receivePostsFailure(subreddit, error.message),
       );
     };
   }
   
-  shouldFetchPosts = (state, subreddit) => {
+  shouldFetchPosts(state, subreddit) {
     const posts = state.postsBySubreddit[subreddit];
   
     if (!posts.items) return true;
@@ -79,8 +112,9 @@ class Provider extends React.Component {
   };
   
   fetchPostsIfNeeded(subreddit) {
-    return (dispatch, getState) =>
-      shouldFetchPosts(getState(), subreddit) && dispatch(fetchPosts(subreddit));
+    state = this.state;
+    return (state) =>
+      shouldFetchPosts(state, subreddit) && fetchPosts(subreddit);
   }
 
   render() {
