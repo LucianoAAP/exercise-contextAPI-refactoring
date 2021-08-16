@@ -7,8 +7,7 @@ import MyContext from './context/MyContext';
 
 class App extends Component {
   componentDidMount() {
-    const value = this.context;
-    const { selectedSubreddit, fetchPostsIfNeeded } = value;
+    const { selectedSubreddit, fetchPostsIfNeeded } = this.context;
     fetchPostsIfNeeded(selectedSubreddit);
   }
 
@@ -17,12 +16,12 @@ class App extends Component {
     selectSubreddit(nextSubreddit);
   }
 
-  handleRefreshClick(event) {
+  async handleRefreshClick(event) {
     event.preventDefault();
 
-    const { selectedSubreddit, refreshSubreddit, fetchPostsIfNeeded } = this.props;
-    refreshSubreddit(selectedSubreddit);
-    fetchPostsIfNeeded(selectedSubreddit);
+    const { selectedSubreddit, refreshSubreddit, fetchPostsIfNeeded } = this.context;
+    await refreshSubreddit(selectedSubreddit);
+    await fetchPostsIfNeeded(selectedSubreddit);
   }
 
   renderLastUpdatedAt() {
@@ -51,12 +50,12 @@ class App extends Component {
     const { selectedSubreddit, postsBySubreddit } = this.context;
     const availableSubreddits = Object.keys(postsBySubreddit);
     const {
-      posts = [],
+      items = [],
       isFetching,
       lastUpdated = null,
-    } = postsBySubreddit;
+    } = postsBySubreddit[selectedSubreddit];
 
-    const isEmpty = posts.length === 0;
+    const isEmpty = items.length === 0;
 
     return (
       <div>
@@ -71,7 +70,7 @@ class App extends Component {
         </div>
         {isFetching && <h2>Loading...</h2>}
         {!isFetching && isEmpty && <h2>Empty.</h2>}
-        {!isFetching && !isEmpty && <Posts posts={posts} />}
+        {!isFetching && !isEmpty && <Posts posts={items} />}
       </div>
     );
   }

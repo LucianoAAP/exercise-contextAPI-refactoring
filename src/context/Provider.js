@@ -55,14 +55,14 @@ class Provider extends React.Component {
     const { postsBySubreddit } = this.state;
     const newState = {
       ...postsBySubreddit,
-      [subreddit]: { ...postsBySubreddit[subreddit], shouldRefreshSubreddit: true, isFetching: false }
+      [subreddit]: { ...postsBySubreddit[subreddit], shouldRefreshSubreddit: false, isFetching: true }
     };
     this.setState({ postsBySubreddit: newState});
   };
   
   receivePostsSuccess(subreddit, json) {
-    posts = json.data.children.map((child) => child.data),
-    receivedAt = Date.now();
+    const posts = json.data.children.map((child) => child.data);
+    const receivedAt = Date.now();
     const { postsBySubreddit } = this.state;
     const newState = {
       ...postsBySubreddit,
@@ -93,14 +93,12 @@ class Provider extends React.Component {
   };
   
   fetchPosts(subreddit) {
-    return () => {
-      requestPosts(subreddit);
+    this.requestPosts(subreddit);
   
-      return getPostsBySubreddit(subreddit).then(
-        (posts) => receivePostsSuccess(subreddit, posts),
-        (error) => receivePostsFailure(subreddit, error.message),
-      );
-    };
+    getPostsBySubreddit(subreddit).then(
+      (posts) => this.receivePostsSuccess(subreddit, posts),
+      (error) => this.receivePostsFailure(subreddit, error.message),
+    );
   }
   
   shouldFetchPosts(state, subreddit) {
@@ -112,9 +110,8 @@ class Provider extends React.Component {
   };
   
   fetchPostsIfNeeded(subreddit) {
-    state = this.state;
-    return (state) =>
-      shouldFetchPosts(state, subreddit) && fetchPosts(subreddit);
+    const state = this.state;
+    this.shouldFetchPosts(state, subreddit) && this.fetchPosts(subreddit);
   }
 
   render() {
